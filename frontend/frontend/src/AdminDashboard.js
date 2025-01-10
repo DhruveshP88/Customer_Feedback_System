@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom"; // Import useNavigate for redirection
 
 const AdminDashboard = () => {
   const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const navigate = useNavigate(); // Initialize navigate
 
   useEffect(() => {
     const fetchFeedbacks = async () => {
@@ -17,7 +19,26 @@ const AdminDashboard = () => {
       }
 
       try {
-        const response = await axios.get(
+        // Fetch user data to get the role
+        const userResponse = await axios.get(
+          "http://localhost:8000/api/user/",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // Add the token to the Authorization header
+            },
+          }
+        );
+
+        const userRole = userResponse.data.role; // Assuming role is in the response
+
+        // Check if the role is admin
+        if (userRole !== "admin") {
+          navigate("/unauthorized"); // Redirect unauthorized users
+          return;
+        }
+
+        // Fetch feedbacks if the role is admin
+        const feedbackResponse = await axios.get(
           "http://localhost:8000/api/feedback/",
           {
             headers: {
@@ -25,7 +46,8 @@ const AdminDashboard = () => {
             },
           }
         );
-        setFeedbacks(response.data);
+
+        setFeedbacks(feedbackResponse.data);
         setLoading(false);
       } catch (err) {
         setError("Error fetching feedbacks.");
@@ -35,7 +57,7 @@ const AdminDashboard = () => {
     };
 
     fetchFeedbacks();
-  }, []);
+  }, [navigate]); // Add navigate as a dependency
 
   if (loading) {
     return <div>Loading...</div>;
@@ -52,7 +74,8 @@ const AdminDashboard = () => {
       <ul>
         {feedbacks.length > 0 ? (
           feedbacks.map((feedback) => (
-            <li key={feedback.id}>
+              <li key={feedback.id}>
+              <strong>User:</strong>{feedback.user}<br />
               <strong>Name:</strong> {feedback.name} <br />
               <strong>Email:</strong> {feedback.email} <br />
               <strong>Feedback Type:</strong> {feedback.feedback_type} <br />

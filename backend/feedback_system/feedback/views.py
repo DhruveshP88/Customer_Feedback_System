@@ -12,10 +12,11 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 from rest_framework import permissions, generics
-from rest_framework import status
+
+
 
 class FeedbackListCreateView(ListCreateAPIView):
-    queryset = Feedback.objects.all()
+    queryset = Feedback.objects.all() 
     serializer_class = FeedbackSerializer
     permission_classes = [IsAuthenticated]
 
@@ -29,7 +30,6 @@ class FeedbackListCreateView(ListCreateAPIView):
         # Automatically associate the feedback with the logged-in user
         serializer.save(user=self.request.user)    
     
-
 
 @api_view(['POST'])
 def register_user(request):
@@ -69,7 +69,18 @@ class LoginView(APIView):
             "token": access_token,
             "role": user.role,  # Include the role in the response
         })
-    
+class UserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        return Response({
+            'email': user.email,
+            'role': user.role,
+            # other user data you want to return
+        })
+
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

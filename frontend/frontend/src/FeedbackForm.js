@@ -1,23 +1,47 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const FeedbackForm = () => {
-  const [user, setUser] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [feedbackType, setFeedbackType] = useState("");
   const [comments, setComments] = useState("");
   const [message, setMessage] = useState("");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login"); // Redirect to login if token is missing
+      return;
+    }
+
+    // Verify user role
+    axios
+      .get("http://localhost:8000/api/user/", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        if (response.data.role !== "staff") {
+          navigate("/unauthorized"); // Redirect unauthorized users
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching user data:", error);
+        navigate("/login"); // Redirect to login on error
+      });
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const token = localStorage.getItem("token"); // Retrieve the token from local storage
+    const token = localStorage.getItem("token");
 
     try {
-      const response = await axios.post("http://localhost:8000/api/feedback/",
+      const response = await axios.post(
+        "http://localhost:8000/api/feedback/",
         {
-          user,
           name,
           email,
           feedback_type: feedbackType,
@@ -25,12 +49,11 @@ const FeedbackForm = () => {
         },
         {
           headers: {
-            Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+            Authorization: `Bearer ${token}`, // Include token in the request
           },
         }
       );
       setMessage("Feedback submitted successfully!");
-      setUser("");
       setName("");
       setEmail("");
       setFeedbackType("");
@@ -48,13 +71,6 @@ const FeedbackForm = () => {
     <div className="feedback-form">
       <h2>Submit Feedback</h2>
       <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="User"
-          value={user}
-          onChange={(e) => setUser(e.target.value)}
-          required
-        />
         <input
           type="text"
           placeholder="Your Name"
