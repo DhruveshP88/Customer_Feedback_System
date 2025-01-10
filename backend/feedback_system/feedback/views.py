@@ -12,23 +12,34 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 from rest_framework import permissions, generics
-
+from textblob import TextBlob
 
 
 class FeedbackListCreateView(ListCreateAPIView):
-    queryset = Feedback.objects.all() 
+    queryset = Feedback.objects.all()
     serializer_class = FeedbackSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
         if user.role == 'admin':
-            return Feedback.objects.all()  # Admin can see all feedback
-        return Feedback.objects.filter(user=user)  # Staff can only see their own feedback
+            return Feedback.objects.all()
+        return Feedback.objects.filter(user=user)
 
     def perform_create(self, serializer):
-        # Automatically associate the feedback with the logged-in user
-        serializer.save(user=self.request.user)    
+        feedback_text = self.request.data.get('comments', '')
+        sentiment = self.analyze_sentiment(feedback_text)  # Analyze sentiment
+        serializer.save(user=self.request.user, sentiment=sentiment)
+
+    def analyze_sentiment(self, feedback):
+        blob = TextBlob(feedback)
+        polarity = blob.sentiment.polarity
+        if polarity > 0.2:
+            return 'Positive'
+        elif polarity < -0.2:
+            return 'Negative'
+        else:
+            return 'Neutral' 
     
 
 @api_view(['POST'])

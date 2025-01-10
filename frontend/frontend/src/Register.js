@@ -40,7 +40,7 @@ const Register = () => {
   return (
     <div className="register-form">
       <h1>Customer Feedback System</h1>
-      <h2>Register</h2> 
+      <h2>Register</h2>
       <form onSubmit={handleRegister}>
         <input
           type="text"
