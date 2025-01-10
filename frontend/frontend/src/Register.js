@@ -6,7 +6,6 @@ const Register = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("staff"); // Default role is staff
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -18,8 +17,7 @@ const Register = () => {
       const response = await axios.post("http://localhost:8000/api/register/", {
         username,
         email,
-        password,
-        role,
+        password
       });
 
       // Handle success (e.g., redirect to login page)
@@ -58,10 +56,6 @@ const Register = () => {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <select value={role} onChange={(e) => setRole(e.target.value)} required>
-          <option value="staff">Staff</option>
-          <option value="admin">Admin</option>
-        </select>
         <button type="submit">Register</button>
       </form>
 

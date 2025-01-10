@@ -25,6 +25,7 @@ class CustomUser(AbstractUser):
         verbose_name='user permissions',
     )
 class Feedback(models.Model):
+    user = models.CharField(max_length=255,default=1) 
     name = models.CharField(max_length=255)
     email = models.EmailField()
     feedback_type = models.CharField(max_length=50)
