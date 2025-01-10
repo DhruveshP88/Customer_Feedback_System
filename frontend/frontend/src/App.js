@@ -12,12 +12,12 @@ const App = () => {
     <Router>
       <Routes>
         {/* Use 'element' instead of 'component' and no 'exact' */}
-        <Route path="/" element={<FeedbackForm />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/feedbackform" element={<FeedbackForm />} />
+        <Route path="/" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/user-dashboard" element={<UserDashboard />} />
-        {/* <Route path="/dashboard" element={<FeedbackDashboard />} />*/}
+        <Route path="/dashboard" element={<FeedbackDashboard />} />
       </Routes>
     </Router>
   );

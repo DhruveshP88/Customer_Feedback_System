@@ -10,6 +10,12 @@ const Register = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    navigate("/login");
+  };
+
   const handleRegister = async (e) => {
     e.preventDefault();
 
@@ -33,7 +39,8 @@ const Register = () => {
 
   return (
     <div className="register-form">
-      <h2>Register</h2>
+      <h1>Customer Feedback System</h1>
+      <h2>Register</h2> 
       <form onSubmit={handleRegister}>
         <input
           type="text"
@@ -58,7 +65,8 @@ const Register = () => {
         />
         <button type="submit">Register</button>
       </form>
-
+      <h2>Already have an account ?</h2>
+      <button onClick={handleLogin}>Click Here !</button>
       {message && <p>{message}</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
     </div>
