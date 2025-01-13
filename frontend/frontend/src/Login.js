@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom"; // Import useNavigate for redirection
+import { useNavigate } from "react-router-dom";
+import { TextField, Button, Typography, Box, Alert } from "@mui/material";
+import { Email, Lock } from "@mui/icons-material";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const navigate = useNavigate(); // Initialize navigate
+  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -36,33 +38,63 @@ const Login = () => {
   };
 
   return (
-    <div className="login-container">
-      <h2>Login</h2>
+    <Box
+      sx={{
+        maxWidth: 400,
+        mx: "auto",
+        mt: 5,
+        p: 3,
+        border: "1px solid #ccc",
+        borderRadius: 2,
+        boxShadow: 3,
+        textAlign: "center",
+        backgroundColor: "#fff",
+      }}
+    >
+      <Typography variant="h4" gutterBottom>
+        Login
+      </Typography>
       <form onSubmit={handleLogin}>
-        <div className="form-group">
-          <label htmlFor="email">Email:</label>
-          <input
+        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+          <Email sx={{ mr: 1, color: "gray" }} />
+          <TextField
+            fullWidth
+            label="Email"
+            variant="outlined"
             type="email"
-            id="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-        </div>
-        <div className="form-group">
-          <label htmlFor="password">Password:</label>
-          <input
+        </Box>
+        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+          <Lock sx={{ mr: 1, color: "gray" }} />
+          <TextField
+            fullWidth
+            label="Password"
+            variant="outlined"
             type="password"
-            id="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-        </div>
-        {error && <p className="error-message">{error}</p>}
-        <button type="submit">Login</button>
+        </Box>
+        <Button
+          fullWidth
+          variant="contained"
+          color="primary"
+          type="submit"
+          sx={{ mt: 2 }}
+        >
+          Login
+        </Button>
       </form>
-    </div>
+      {error && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {error}
+        </Alert>
+      )}
+    </Box>
   );
 };
 

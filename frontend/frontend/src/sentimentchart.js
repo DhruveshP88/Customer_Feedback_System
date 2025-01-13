@@ -30,7 +30,7 @@ const SentimentChart = () => {
             {
               label: "Sentiment Distribution",
               data: Object.values(data),
-              backgroundColor: ["#4CAF50", "#FFC107", "#F44336"], // Colors for Positive, Neutral, Negative
+              backgroundColor: ["#F44336", "#FFC107", "#4CAF50"], // Colors for Positive, Neutral, Negative
               borderColor: ["#388E3C", "#FFA000", "#D32F2F"], // Optional border colors
               borderWidth: 1,
             },
@@ -49,7 +49,13 @@ const SentimentChart = () => {
     <div>
       <h3>Sentiment Distribution</h3>
       {error && <p style={{ color: "red" }}>{error}</p>}
-      {chartData ? <Pie data={chartData} /> : <p>Loading chart...</p>}
+      {chartData ? (
+        <div style={{ position: "relative", width: "250px", height: "250px" }}>
+          <Pie data={chartData} />
+        </div>
+      ) : (
+        <p>Loading chart...</p>
+      )}
     </div>
   );
 };

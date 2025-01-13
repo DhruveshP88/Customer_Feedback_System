@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import {
+  TextField,
+  Button,
+  Typography,
+  Box,
+  Alert,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
+} from "@mui/material";
 
 const FeedbackForm = () => {
   const [name, setName] = useState("");
@@ -68,43 +79,76 @@ const FeedbackForm = () => {
   };
 
   return (
-    <div className="feedback-form">
-      <h2>Submit Feedback</h2>
+    <Box
+      sx={{
+        maxWidth: 600,
+        mx: "auto",
+        mt: 5,
+        p: 3,
+        border: "1px solid #ccc",
+        borderRadius: 2,
+        boxShadow: 3,
+        backgroundColor: "#fff",
+      }}
+    >
+      <Typography variant="h4" gutterBottom>
+        Submit Feedback
+      </Typography>
       <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Your Name"
+        <TextField
+          fullWidth
+          label="Your Name"
+          variant="outlined"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
+          sx={{ mb: 2 }}
         />
-        <input
+        <TextField
+          fullWidth
+          label="Your Email"
+          variant="outlined"
           type="email"
-          placeholder="Your Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          sx={{ mb: 2 }}
         />
-        <select
-          value={feedbackType}
-          onChange={(e) => setFeedbackType(e.target.value)}
-          required
-        >
-          <option value="">Select Feedback Type</option>
-          <option value="product">Product</option>
-          <option value="service">Service</option>
-          <option value="other">Other</option>
-        </select>
-        <textarea
-          placeholder="Your Comments"
+        <FormControl fullWidth sx={{ mb: 2 }}>
+          <InputLabel>Feedback Type</InputLabel>
+          <Select
+            value={feedbackType}
+            onChange={(e) => setFeedbackType(e.target.value)}
+            required
+          >
+            <MenuItem value="product">Product</MenuItem>
+            <MenuItem value="service">Service</MenuItem>
+            <MenuItem value="other">Other</MenuItem>
+          </Select>
+        </FormControl>
+        <TextField
+          fullWidth
+          label="Your Comments"
+          variant="outlined"
+          multiline
+          rows={4}
           value={comments}
           onChange={(e) => setComments(e.target.value)}
           required
-        ></textarea>
-        <button type="submit">Submit</button>
+          sx={{ mb: 2 }}
+        />
+        <Button
+          fullWidth
+          variant="contained"
+          color="primary"
+          type="submit"
+          sx={{ mb: 2 }}
+        >
+          Submit
+        </Button>
       </form>
-      {message && <p>{message}</p>}
-    </div>
+      {message && <Alert severity="success">{message}</Alert>}
+    </Box>
   );
 };
 

@@ -38,9 +38,9 @@ class FeedbackListCreateView(ListCreateAPIView):
     def analyze_sentiment(self, feedback):
         blob = TextBlob(feedback)
         polarity = blob.sentiment.polarity
-        if polarity > 0.2:
+        if polarity > 0.29:
             return 'Positive'
-        elif polarity < -0.2:
+        elif polarity < -0.29:
             return 'Negative'
         else:
             return 'Neutral' 

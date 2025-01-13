@@ -1,15 +1,24 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import {
+  Box,
+  Button,
+  Typography,
+  List,
+  ListItem,
+  ListItemText,
+  Divider,
+  Alert,
+} from "@mui/material";
 
 const UserDashboard = () => {
   const [feedbacks, setFeedbacks] = useState([]);
-  const navigate = useNavigate(); // Initialize navigate
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  // Function to handle button click
   const handleButtonClick = () => {
-    // Navigate to the feedback form page
-    navigate("/feedbackform");
+    navigate("/feedbackform"); // Navigate to the feedback form page
   };
 
   useEffect(() => {
@@ -24,28 +33,62 @@ const UserDashboard = () => {
         );
         setFeedbacks(response.data);
       } catch (err) {
+        setError("Error fetching feedback. Please try again.");
         console.error("Error fetching user feedback:", err);
       }
     };
 
     fetchUserFeedback();
-  }, []); // No dependencies required here
+  }, []);
 
   return (
-    <div>
-      <h2>User Dashboard</h2>
-      <h3>Your Feedbacks</h3>
-      <ul>
-        {feedbacks.map((feedback) => (
-          <li key={feedback.id}>
-            <strong>Feedback Type:</strong> {feedback.feedback_type} <br />
-            <strong>Comments:</strong> {feedback.comments} <br />
-            <hr />
-          </li>
-        ))}
-      </ul>
-      <button onClick={handleButtonClick}>Submit a Feedback</button>
-    </div>
+    <Box
+      sx={{
+        maxWidth: 800,
+        mx: "auto",
+        mt: 5,
+        p: 3,
+        border: "1px solid #ccc",
+        borderRadius: 2,
+        boxShadow: 3,
+        backgroundColor: "#fff",
+      }}
+    >
+      <Typography variant="h4" gutterBottom>
+        User Dashboard
+      </Typography>
+      <Typography variant="h6" gutterBottom>
+        Your Feedbacks
+      </Typography>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+      <List>
+        {feedbacks.length > 0 ? (
+          feedbacks.map((feedback) => (
+            <ListItem key={feedback.id}>
+              <ListItemText
+                primary={`Feedback Type: ${feedback.feedback_type}`}
+                secondary={`Comments: ${feedback.comments}`}
+              />
+              <Divider />
+            </ListItem>
+          ))
+        ) : (
+          <Typography variant="body1">No feedback available.</Typography>
+        )}
+      </List>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleButtonClick}
+        sx={{ mt: 3 }}
+      >
+        Submit a Feedback
+      </Button>
+    </Box>
   );
 };
 

@@ -2,14 +2,28 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import SentimentChart from "./sentimentchart";
-
+import {
+  Box,
+  Button,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  TextField,
+  CircularProgress,
+  Alert,
+} from "@mui/material";
 
 const AdminDashboard = () => {
   const [feedbacks, setFeedbacks] = useState([]);
   const [filteredFeedbacks, setFilteredFeedbacks] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10); // Items per page
+  const [itemsPerPage] = useState(10);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -61,7 +75,6 @@ const AdminDashboard = () => {
     fetchFeedbacks();
   }, [navigate]);
 
-  // Search feedbacks
   useEffect(() => {
     const filtered = feedbacks.filter(
       (feedback) =>
@@ -73,10 +86,9 @@ const AdminDashboard = () => {
         feedback.comments.toLowerCase().includes(searchQuery.toLowerCase())
     );
     setFilteredFeedbacks(filtered);
-    setCurrentPage(1); // Reset to the first page on search
+    setCurrentPage(1);
   }, [searchQuery, feedbacks]);
 
-  // Pagination logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredFeedbacks.slice(
@@ -86,87 +98,138 @@ const AdminDashboard = () => {
 
   const handlePageChange = (pageNumber) => setCurrentPage(pageNumber);
 
+  const handleLogout = () => {
+    // Clear the token from localStorage
+    localStorage.removeItem("token");
+    // Redirect to the login page
+    navigate("/login");
+  };
+
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
   }
 
   if (error) {
-    return <div>{error}</div>;
+    return <Alert severity="error">{error}</Alert>;
   }
 
   return (
-    <div>
-      <h2>Admin Dashboard</h2>
-      <h3>All Feedbacks</h3>
+    <Box
+      sx={{
+        maxWidth: 1200,
+        mx: "auto",
+        mt: 5,
+        p: 3,
+        borderRadius: 2,
+        boxShadow: 3,
+      }}
+    >
+      <Typography variant="h4" gutterBottom>
+        Admin Dashboard
+      </Typography>
+      <Typography variant="h6" gutterBottom>
+        All Feedbacks
+      </Typography>
+
+      {/* Logout Button */}
+      <Button
+        variant="contained"
+        color="error"
+        onClick={handleLogout}
+        sx={{ mb: 3 }}
+      >
+        Logout
+      </Button>
 
       {/* Search bar */}
-      <input
-        type="text"
-        placeholder="Search feedbacks..."
+      <TextField
+        label="Search Feedbacks"
+        variant="outlined"
+        fullWidth
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        style={{ marginBottom: "20px", padding: "5px", width: "100%" }}
+        sx={{ mb: 3 }}
       />
 
       {/* Feedbacks table */}
       {currentItems.length > 0 ? (
-        <table border="1" width="100%" style={{ borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <th>User</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Feedback Type</th>
-              <th>Comments</th>
-              <th>Sentiment</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentItems.map((feedback) => (
-              <tr key={feedback.id}>
-                <td>{feedback.user}</td>
-                <td>{feedback.name}</td>
-                <td>{feedback.email}</td>
-                <td>{feedback.feedback_type}</td>
-                <td>{feedback.comments}</td>
-                <td>{feedback.sentiment || "Not analyzed"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <TableContainer component={Paper} sx={{ mb: 3 }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>
+                  <strong>User</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Name</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Email</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Feedback Type</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Comments</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Sentiment</strong>
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {currentItems.map((feedback) => (
+                <TableRow key={feedback.id}>
+                  <TableCell>{feedback.user}</TableCell>
+                  <TableCell>{feedback.name}</TableCell>
+                  <TableCell>{feedback.email}</TableCell>
+                  <TableCell>{feedback.feedback_type}</TableCell>
+                  <TableCell>{feedback.comments}</TableCell>
+                  <TableCell>{feedback.sentiment || "Not analyzed"}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       ) : (
-        <p>No feedback available.</p>
+        <Typography variant="body1">No feedback available.</Typography>
       )}
-      <div>
-        <h1>Feedback Dashboard</h1>
-        <SentimentChart />
-        {/* Add other dashboard components here */}
-      </div>
+
+      <SentimentChart />
 
       {/* Pagination */}
       {filteredFeedbacks.length > itemsPerPage && (
-        <div style={{ marginTop: "20px" }}>
+        <Box sx={{ mt: 2, display: "flex", justifyContent: "center" }}>
           {[
             ...Array(Math.ceil(filteredFeedbacks.length / itemsPerPage)).keys(),
           ].map((page) => (
-            <button
+            <Button
               key={page}
               onClick={() => handlePageChange(page + 1)}
-              style={{
-                margin: "0 5px",
-                padding: "5px 10px",
-                backgroundColor: currentPage === page + 1 ? "#007bff" : "#fff",
+              variant="outlined"
+              sx={{
+                mx: 0.5,
+                backgroundColor: currentPage === page + 1 ? "#1976d2" : "#fff",
                 color: currentPage === page + 1 ? "#fff" : "#000",
-                border: "1px solid #ddd",
-                cursor: "pointer",
               }}
             >
               {page + 1}
-            </button>
+            </Button>
           ))}
-        </div>
+        </Box>
       )}
-    </div>
+    </Box>
   );
 };
 
