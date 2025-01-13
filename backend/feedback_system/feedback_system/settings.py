@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -160,3 +159,18 @@ REST_FRAMEWORK = {
 #customuser model
 
 AUTH_USER_MODEL = 'feedback.CustomUser'
+
+
+# settings.py
+
+# Email backend settings (example for SMTP)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Example SMTP server
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'jhonpamarkytics@gmail.com'
+EMAIL_HOST_PASSWORD = 'sjathyprayordzwj'
+
+# Admin email settings
+ADMIN_EMAILS = ['jhonpamarkytics@gmail.com']
+DEFAULT_FROM_EMAIL = 'jhonpamarkytics@gmail.com'

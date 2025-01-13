@@ -21,6 +21,13 @@ const UserDashboard = () => {
     navigate("/feedbackform"); // Navigate to the feedback form page
   };
 
+  const handleLogout = () => {
+    // Remove the token from localStorage
+    localStorage.removeItem("token");
+    // Redirect to the login page
+    navigate("/login");
+  };
+
   useEffect(() => {
     const fetchUserFeedback = async () => {
       try {
@@ -87,6 +94,14 @@ const UserDashboard = () => {
         sx={{ mt: 3 }}
       >
         Submit a Feedback
+      </Button>
+      <Button
+        variant="outlined"
+        color="secondary"
+        onClick={handleLogout}
+        sx={{ mt: 2, ml: 2 }}
+      >
+        Logout
       </Button>
     </Box>
   );
