@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import SentimentChart from "./sentimentchart";
+
 
 const AdminDashboard = () => {
   const [feedbacks, setFeedbacks] = useState([]);
@@ -135,6 +137,11 @@ const AdminDashboard = () => {
       ) : (
         <p>No feedback available.</p>
       )}
+      <div>
+        <h1>Feedback Dashboard</h1>
+        <SentimentChart />
+        {/* Add other dashboard components here */}
+      </div>
 
       {/* Pagination */}
       {filteredFeedbacks.length > itemsPerPage && (

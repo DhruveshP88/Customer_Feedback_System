@@ -11,9 +11,13 @@ from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
-from rest_framework import permissions, generics
+from rest_framework import permissions, generics    
 from textblob import TextBlob
-
+from django.db.models import Count
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from .models import Feedback
 
 class FeedbackListCreateView(ListCreateAPIView):
     queryset = Feedback.objects.all()
@@ -40,7 +44,14 @@ class FeedbackListCreateView(ListCreateAPIView):
             return 'Negative'
         else:
             return 'Neutral' 
-    
+class SentimentDistributionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        sentiment_counts = Feedback.objects.values('sentiment').annotate(count=Count('sentiment'))
+        data = {item['sentiment']: item['count'] for item in sentiment_counts}
+        return Response(data)
+
 
 @api_view(['POST'])
 def register_user(request):
