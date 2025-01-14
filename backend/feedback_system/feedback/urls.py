@@ -6,6 +6,7 @@ from .views import register_user
 from .views import LoginView
 from .views import UserView
 from .views import SentimentDistributionView
+from .views import negative_feedback_alerts
 
 urlpatterns = [
     path('api/register/', register_user, name='register'),
@@ -13,5 +14,6 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/feedback/', FeedbackListCreateView.as_view(), name='feedback-list'),
     path('api/user/', UserView.as_view(), name='user-detail'),
-    path('api/sentiment-distribution/', SentimentDistributionView.as_view(), name='sentiment-distribution')
+    path('api/sentiment-distribution/', SentimentDistributionView.as_view(), name='sentiment-distribution'),
+    path('api/negative-feedback-alerts/', negative_feedback_alerts,name='negative-feedback-alert')
 ]

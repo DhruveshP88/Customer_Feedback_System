@@ -21,6 +21,7 @@ import {
 const AdminDashboard = () => {
   const [feedbacks, setFeedbacks] = useState([]);
   const [filteredFeedbacks, setFilteredFeedbacks] = useState([]);
+  const [alerts, setAlerts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
@@ -30,7 +31,7 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchFeedbacks = async () => {
+    const fetchData = async () => {
       const token = localStorage.getItem("token");
 
       if (!token) {
@@ -40,6 +41,7 @@ const AdminDashboard = () => {
       }
 
       try {
+        // Verify user role
         const userResponse = await axios.get(
           "http://localhost:8000/api/user/",
           {
@@ -54,6 +56,7 @@ const AdminDashboard = () => {
           return;
         }
 
+        // Fetch all feedbacks
         const feedbackResponse = await axios.get(
           "http://localhost:8000/api/feedback/",
           {
@@ -63,16 +66,27 @@ const AdminDashboard = () => {
           }
         );
 
+        // Fetch negative feedback alerts
+        const alertResponse = await axios.get(
+          "http://localhost:8000/api/negative-feedback-alerts/",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
         setFeedbacks(feedbackResponse.data);
         setFilteredFeedbacks(feedbackResponse.data);
+        setAlerts(alertResponse.data);
         setLoading(false);
       } catch (err) {
-        setError("Error fetching feedbacks.");
+        setError("Error fetching data.");
         setLoading(false);
       }
     };
 
-    fetchFeedbacks();
+    fetchData();
   }, [navigate]);
 
   useEffect(() => {
@@ -99,10 +113,12 @@ const AdminDashboard = () => {
   const handlePageChange = (pageNumber) => setCurrentPage(pageNumber);
 
   const handleLogout = () => {
-    // Clear the token from localStorage
     localStorage.removeItem("token");
-    // Redirect to the login page
     navigate("/login");
+  };
+
+  const handleDismissAlert = (id) => {
+    setAlerts((prevAlerts) => prevAlerts.filter((alert) => alert.id !== id));
   };
 
   if (loading) {
@@ -138,9 +154,35 @@ const AdminDashboard = () => {
       <Typography variant="h4" gutterBottom>
         Admin Dashboard
       </Typography>
-      <Typography variant="h6" gutterBottom>
-        All Feedbacks
-      </Typography>
+
+      {/* Negative Feedback Alerts */}
+      {alerts.length > 0 && (
+        <Box sx={{ mb: 3, p: 2, border: "1px solid red", borderRadius: 2 }}>
+          <Typography variant="h6" color="error" gutterBottom>
+            Negative Feedback Alerts
+          </Typography>
+          <ul>
+            {alerts.map((alert) => (
+              <li key={alert.id}>
+                <Typography variant="body2">
+                  <strong>Name:</strong> {alert.name} <br />
+                  <strong>Email:</strong> {alert.email} <br />
+                  <strong>Comments:</strong> {alert.comments} <br />
+                  <strong>Sentiment:</strong>{" "}
+                  <span style={{ color: "red" }}>{alert.sentiment}</span>
+                </Typography>
+                <Button
+                  variant="text"
+                  color="error"
+                  onClick={() => handleDismissAlert(alert.id)}
+                >
+                  Dismiss
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </Box>
+      )}
 
       {/* Logout Button */}
       <Button

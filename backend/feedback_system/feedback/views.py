@@ -17,7 +17,8 @@ from django.db.models import Count
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from .models import Feedback
+from django.core.mail import send_mail
+from django.conf import settings
 
 class FeedbackListCreateView(ListCreateAPIView):
     queryset = Feedback.objects.all()
@@ -33,7 +34,11 @@ class FeedbackListCreateView(ListCreateAPIView):
     def perform_create(self, serializer):
         feedback_text = self.request.data.get('comments', '')
         sentiment = self.analyze_sentiment(feedback_text)  # Analyze sentiment
-        serializer.save(user=self.request.user, sentiment=sentiment)
+        feedback = serializer.save(user=self.request.user, sentiment=sentiment)
+
+        # Notify admin if sentiment is negative
+        if sentiment == 'Negative':
+            self.notify_admin(feedback)
 
     def analyze_sentiment(self, feedback):
         blob = TextBlob(feedback)
@@ -43,7 +48,14 @@ class FeedbackListCreateView(ListCreateAPIView):
         elif polarity < -0.29:
             return 'Negative'
         else:
-            return 'Neutral' 
+            return 'Neutral'
+
+    def notify_admin(self, feedback):
+        subject = "Negative Feedback Alert"
+        message = f"New negative feedback received:\n\n{feedback.comments}"
+        recipient_list = ['jhonpamarkytics@gmail.com']  # Replace with actual admin emails
+        send_mail(subject, message, settings.EMAIL_HOST_USER, recipient_list)
+
 class SentimentDistributionView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -56,7 +68,7 @@ class SentimentDistributionView(APIView):
 @api_view(['POST'])
 def register_user(request):
     serializer = UserSerializer(data=request.data)
-    if serializer.is_valid():
+    if serializer.is_valid():  
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -118,5 +130,14 @@ def staff_dashboard(request):
         return Response({"message": "Welcome, Staff!"})
     return Response({"error": "Access denied."}, status=403)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def negative_feedback_alerts(request):
+    if request.user.role != 'admin':
+        return Response({"error": "Access denied."}, status=403)
+
+    negative_feedback = Feedback.objects.filter(sentiment='Negative').order_by('-id')[:5]
+    serializer = FeedbackSerializer(negative_feedback, many=True)
+    return Response(serializer.data)
 
 
