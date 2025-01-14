@@ -114,8 +114,6 @@ class UserView(APIView):
             # other user data you want to return
         })
 
-
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def admin_dashboard(request):
