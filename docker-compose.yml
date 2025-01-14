@@ -1,0 +1,35 @@
+services:
+  backend:
+    build:
+      context: ./backend/feedback_system
+    container_name: backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/feedback_system:/app
+    environment:
+      - DATABASE_URL=postgres://dhruvesh:hellow123@db:5432/postgres
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: ./frontend/frontend
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:13
+    container_name: db
+    environment:
+      POSTGRES_USER: dhruvesh
+      POSTGRES_PASSWORD: hellow123
+      POSTGRES_DB: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

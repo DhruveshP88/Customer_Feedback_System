@@ -10,6 +10,12 @@ const Login = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+
+    const handleRegister = async (e) => {
+      e.preventDefault();
+      navigate("/");
+    };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setError(""); // Reset error message
@@ -89,6 +95,18 @@ const Login = () => {
           Login
         </Button>
       </form>
+      <Typography variant="body1" sx={{ mt: 3 }}>
+          Don't have an Account ? 
+      </Typography>
+      <Button
+        fullWidth
+        variant="outlined"
+        color="secondary"
+        onClick={handleRegister}
+        sx={{ mt: 1 }}
+      >
+        Click Here!
+      </Button>
       {error && (
         <Alert severity="error" sx={{ mt: 2 }}>
           {error}
