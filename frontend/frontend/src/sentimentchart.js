@@ -19,7 +19,7 @@ import {
   LinearScale,
   BarElement,
 } from "chart.js";
-
+import { useNavigate } from "react-router-dom";
 // Register Chart.js components
 ChartJS.register(
   ArcElement,
@@ -33,6 +33,38 @@ ChartJS.register(
 const SentimentChart = () => {
   const [chartData, setChartData] = useState(null);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
+ useEffect(() => {
+   const verifyUserRole = async () => {
+     const token = localStorage.getItem("token");
+     if (!token) {
+       navigate("/login"); // Redirect to login if no token is found
+       return;
+     }
+
+     try {
+       const userResponse = await axios.get(
+         "http://localhost:8000/api/user-detail/",
+         {
+           headers: {
+             Authorization: `Bearer ${token}`,
+           },
+         }
+       );
+
+       if (userResponse.data.role !== "admin") {
+         navigate("/unauthorized"); // Redirect to unauthorized page if role is not admin
+         return;
+       }
+     } catch (err) {
+       setError("Error fetching user data.");
+       console.error("Error verifying user role:", err);
+     }
+   };
+   verifyUserRole();
+ }, [navigate]);
+
+
 
   useEffect(() => {
     const fetchData = async () => {

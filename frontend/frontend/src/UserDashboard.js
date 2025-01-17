@@ -24,11 +24,42 @@ const UserDashboard = () => {
   };
 
   const handleLogout = () => {
-    // Remove the token from localStorage
+    // Remove the token and role from localStorage
     localStorage.removeItem("token");
+    localStorage.removeItem("role");
     // Redirect to the login page
     navigate("/login");
   };
+
+  useEffect(() => {
+    const verifyUserRole = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/login"); // Redirect to login if no token is found
+        return;
+      }
+
+      try {
+        const userResponse = await axios.get(
+          "http://localhost:8000/api/user-detail/",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (userResponse.data.role !== "staff") {
+          navigate("/unauthorized"); // Redirect to unauthorized page if role is not admin
+          return;
+        }
+      } catch (err) {
+        setError("Error fetching user data.");
+        console.error("Error verifying user role:", err);
+      }
+    };
+    verifyUserRole();
+  }, [navigate]);
 
   useEffect(() => {
     const fetchUserFeedback = async () => {
