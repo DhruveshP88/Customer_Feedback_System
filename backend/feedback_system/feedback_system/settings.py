@@ -39,8 +39,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'feedback',
-    'rest_framework_simplejwt',
- 
+    'rest_framework_simplejwt', 
+    
 ]
 
 MIDDLEWARE = [
@@ -174,3 +174,6 @@ EMAIL_HOST_PASSWORD = 'sjathyprayordzwj'
 # Admin email settings
 ADMIN_EMAILS = ['jhonpamarkytics@gmail.com']
 DEFAULT_FROM_EMAIL = 'jhonpamarkytics@gmail.com'
+
+
+

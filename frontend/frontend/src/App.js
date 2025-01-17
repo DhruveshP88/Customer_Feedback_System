@@ -5,7 +5,8 @@ import Login from "./Login";
 import AdminDashboard from "./AdminDashboard";
 import UserDashboard from "./UserDashboard";
 import FeedbackForm from "./FeedbackForm";
-
+import UserManagement from "./Usermanagement";
+import Sentimentchart from "./sentimentchart";
 const App = () => {
   return (
     <Router>
@@ -16,6 +17,8 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/user-dashboard" element={<UserDashboard />} />
+        <Route path="/user-management" element={<UserManagement />} />
+        <Route path="/sentiment-chart" element={<Sentimentchart />} />
       </Routes>
     </Router>
   );

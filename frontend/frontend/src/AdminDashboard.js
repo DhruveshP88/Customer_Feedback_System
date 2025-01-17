@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import SentimentChart from "./sentimentchart";
 import {
   Box,
   Button,
@@ -16,7 +15,16 @@ import {
   TextField,
   CircularProgress,
   Alert,
+  AppBar,
+  Toolbar,
+  InputAdornment,
+  Grid,
+  Divider,
+  Card,
+  CardContent,
+  Link,
 } from "@mui/material";
+import { Search } from "@mui/icons-material";
 
 const AdminDashboard = () => {
   const [feedbacks, setFeedbacks] = useState([]);
@@ -27,7 +35,6 @@ const AdminDashboard = () => {
   const [itemsPerPage] = useState(10);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -41,9 +48,8 @@ const AdminDashboard = () => {
       }
 
       try {
-        // Verify user role
         const userResponse = await axios.get(
-          "http://localhost:8000/api/user/",
+          "http://localhost:8000/api/user-detail/",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -56,7 +62,6 @@ const AdminDashboard = () => {
           return;
         }
 
-        // Fetch all feedbacks
         const feedbackResponse = await axios.get(
           "http://localhost:8000/api/feedback/",
           {
@@ -66,7 +71,6 @@ const AdminDashboard = () => {
           }
         );
 
-        // Fetch negative feedback alerts
         const alertResponse = await axios.get(
           "http://localhost:8000/api/negative-feedback-alerts/",
           {
@@ -97,7 +101,8 @@ const AdminDashboard = () => {
         feedback.feedback_type
           .toLowerCase()
           .includes(searchQuery.toLowerCase()) ||
-        feedback.comments.toLowerCase().includes(searchQuery.toLowerCase())
+        feedback.comments.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        feedback.sentiment.toLowerCase().includes(searchQuery.toLowerCase())
     );
     setFilteredFeedbacks(filtered);
     setCurrentPage(1);
@@ -151,9 +156,55 @@ const AdminDashboard = () => {
         boxShadow: 3,
       }}
     >
-      <Typography variant="h4" gutterBottom>
-        Admin Dashboard
-      </Typography>
+      {/* Navigation Bar */}
+      <AppBar position="sticky">
+        <Toolbar>
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+            Admin Dashboard
+          </Typography>
+          <Button
+            color="inherit"
+            onClick={() => navigate("/user-management")}
+            sx={{ mr: 2 }}
+          >
+            Manage Users
+          </Button>
+          <TextField
+            label="Search Feedbacks"
+            variant="outlined"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            sx={{
+              mr: 2,
+              backgroundColor: "white",
+              borderRadius: 1,
+              width: 250,
+            }}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <Search />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Button
+            component="button"
+            variant="body2"
+            onClick={() => navigate("/sentiment-chart")}
+            sx={{
+              textDecoration: "none",
+              color: "white",
+              ml: 2,
+            }}
+          >
+            Visualization
+          </Button>
+          <Button color="inherit" onClick={handleLogout}>
+            Logout
+          </Button>
+        </Toolbar>
+      </AppBar>
 
       {/* Negative Feedback Alerts */}
       {alerts.length > 0 && (
@@ -184,27 +235,9 @@ const AdminDashboard = () => {
         </Box>
       )}
 
-      {/* Logout Button */}
-      <Button
-        variant="contained"
-        color="error"
-        onClick={handleLogout}
-        sx={{ mb: 3 }}
-      >
-        Logout
-      </Button>
+      <Divider sx={{ my: 3 }} />
 
-      {/* Search bar */}
-      <TextField
-        label="Search Feedbacks"
-        variant="outlined"
-        fullWidth
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        sx={{ mb: 3 }}
-      />
-
-      {/* Feedbacks table */}
+      {/* Feedbacks Table */}
       {currentItems.length > 0 ? (
         <TableContainer component={Paper} sx={{ mb: 3 }}>
           <Table>
@@ -247,8 +280,6 @@ const AdminDashboard = () => {
       ) : (
         <Typography variant="body1">No feedback available.</Typography>
       )}
-
-      <SentimentChart />
 
       {/* Pagination */}
       {filteredFeedbacks.length > itemsPerPage && (

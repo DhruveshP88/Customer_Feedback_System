@@ -1,12 +1,12 @@
-from rest_framework import serializers
+from rest_framework import serializers # type: ignore
 from .models import Feedback
-from django.contrib.auth import get_user_model
-from rest_framework import serializers
+from django.contrib.auth import get_user_model # type: ignore
+from rest_framework import serializers # type: ignore
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
-        fields = ['username', 'email', 'password', 'role']
+        fields = ['id','username', 'email', 'password', 'role','is_active']
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):

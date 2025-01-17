@@ -30,7 +30,7 @@ const FeedbackForm = () => {
 
     // Verify user role
     axios
-      .get("http://localhost:8000/api/user/", {
+      .get("http://localhost:8000/api/user-detail/", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
@@ -69,6 +69,9 @@ const FeedbackForm = () => {
       setEmail("");
       setFeedbackType("");
       setComments("");
+
+      // Redirect to the user dashboard after successful feedback submission
+      navigate("/user-dashboard"); // Replace with the actual user dashboard route
     } catch (error) {
       setMessage("Error submitting feedback.");
       console.error(

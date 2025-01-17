@@ -1,24 +1,22 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from rest_framework.views import APIView # type: ignore
+from rest_framework.response import Response # type: ignore
 from .models import Feedback
-from .serializers import FeedbackSerializer
-from rest_framework import status
+from .serializers import FeedbackSerializer 
+from rest_framework import status # type: ignore
 from .serializers import UserSerializer
-from rest_framework.generics import ListCreateAPIView
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.exceptions import AuthenticationFailed
-from django.contrib.auth import authenticate
-from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import get_user_model
-from rest_framework import permissions, generics    
-from textblob import TextBlob
-from django.db.models import Count
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from django.core.mail import send_mail
-from django.conf import settings
+from rest_framework.generics import ListCreateAPIView # type: ignore
+from rest_framework.permissions import IsAuthenticated # type: ignore
+from rest_framework.decorators import api_view, permission_classes # type: ignore
+from rest_framework.exceptions import AuthenticationFailed # type: ignore
+from django.contrib.auth import authenticate # type: ignore
+from rest_framework_simplejwt.tokens import RefreshToken  # type: ignore
+from django.contrib.auth import get_user_model # type: ignore
+from rest_framework import permissions, generics    # type: ignore
+from textblob import TextBlob # type: ignore
+from django.db.models import Count # type: ignore
+from rest_framework.response import Response # type: ignore
+from django.core.mail import send_mail # type: ignore
+from django.conf import settings # type: ignore
 
 class FeedbackListCreateView(ListCreateAPIView):
     queryset = Feedback.objects.all()
@@ -56,6 +54,7 @@ class FeedbackListCreateView(ListCreateAPIView):
         recipient_list = ['jhonpamarkytics@gmail.com']  # Replace with actual admin emails
         send_mail(subject, message, settings.EMAIL_HOST_USER, recipient_list)
 
+
 class SentimentDistributionView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -90,6 +89,10 @@ class LoginView(APIView):
         except get_user_model().DoesNotExist:
             return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
+        # Check if the user is active
+        if not user.is_active:
+            return Response({"detail": "Your account is inactive."}, status=status.HTTP_401_UNAUTHORIZED)
+
         # Check if the password is correct
         if not user.check_password(password):
             return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -103,6 +106,7 @@ class LoginView(APIView):
             "token": access_token,
             "role": user.role,  # Include the role in the response
         })
+
 class UserView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -139,3 +143,46 @@ def negative_feedback_alerts(request):
     return Response(serializer.data)
 
 
+class UserManagementView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role != 'admin':
+            return Response({"error": "Access denied."}, status=403)
+
+        users = get_user_model().objects.all()
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        if request.user.role != 'admin':
+            return Response({"error": "Access denied."}, status=403)
+
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, user_id):
+        if request.user.role != 'admin':
+            return Response({"error": "Access denied."}, status=403)
+
+        try:
+            user = get_user_model().objects.get(id=user_id)
+            user.delete()
+            return Response({"message": "User deleted successfully."})
+        except get_user_model().DoesNotExist:
+            return Response({"error": "User not found."}, status=404)
+
+    def patch(self, request, user_id):
+        if request.user.role != 'admin':
+            return Response({"error": "Access denied."}, status=403)
+
+        try:
+            user = get_user_model().objects.get(id=user_id)
+            user.is_active = not user.is_active
+            user.save()
+            return Response({"message": f"User {'activated' if user.is_active else 'deactivated'} successfully."})
+        except get_user_model().DoesNotExist:
+            return Response({"error": "User not found."}, status=404)

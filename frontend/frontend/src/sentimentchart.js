@@ -1,10 +1,34 @@
 import React, { useEffect, useState } from "react";
-import { Pie } from "react-chartjs-2";
+import { Pie, Bar } from "react-chartjs-2";
 import axios from "axios";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+import {
+  Card,
+  CardContent,
+  Typography,
+  Grid,
+  Box,
+  CircularProgress,
+  Alert,
+} from "@mui/material";
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+} from "chart.js";
 
 // Register Chart.js components
-ChartJS.register(ArcElement, Tooltip, Legend);
+ChartJS.register(
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement
+);
 
 const SentimentChart = () => {
   const [chartData, setChartData] = useState(null);
@@ -24,18 +48,35 @@ const SentimentChart = () => {
 
         const data = response.data;
 
-        setChartData({
+        // Pie Chart Data
+        const pieData = {
           labels: Object.keys(data),
           datasets: [
             {
               label: "Sentiment Distribution",
               data: Object.values(data),
-              backgroundColor: ["#F44336", "#FFC107", "#4CAF50"], // Colors for Positive, Neutral, Negative
+              backgroundColor: ["#FFC107", "#4CAF50", "#F44336"],
               borderColor: ["#388E3C", "#FFA000", "#D32F2F"], // Optional border colors
               borderWidth: 1,
             },
           ],
-        });
+        };
+
+        // Bar Chart Data (Feedback count by type)
+        const barData = {
+          labels: ["Positive", "Neutral", "Negative"],
+          datasets: [
+            {
+              label: "Feedback Count",
+              data: Object.values(data),
+              backgroundColor: ["#4CAF50", "#FFC107", "#F44336"],
+              borderColor: ["#388E3C", "#FFA000", "#D32F2F"],
+              borderWidth: 1,
+            },
+          ],
+        };
+
+        setChartData({ pieData, barData });
       } catch (error) {
         console.error("Error fetching sentiment data:", error);
         setError("Failed to load sentiment data. Please try again.");
@@ -46,17 +87,59 @@ const SentimentChart = () => {
   }, []);
 
   return (
-    <div>
-      <h3>Sentiment Distribution</h3>
-      {error && <p style={{ color: "red" }}>{error}</p>}
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        Sentiment Analysis Dashboard
+      </Typography>
+      {error && <Alert severity="error">{error}</Alert>}
       {chartData ? (
-        <div style={{ position: "relative", width: "250px", height: "250px" }}>
-          <Pie data={chartData} />
-        </div>
+        <Grid container spacing={3}>
+          {/* Pie Chart */}
+          <Grid item xs={12} sm={6} md={5}>
+            <Card sx={{ boxShadow: 3 }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Sentiment Distribution
+                </Typography>
+                <div
+                  style={{
+                    position: "relative",
+                    width: "100%",
+                    height: "300px",
+                  }}
+                >
+                  <Pie data={chartData.pieData} />
+                </div>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Bar Chart */}
+          <Grid item xs={12} sm={6} md={7}>
+            <Card sx={{ boxShadow: 3 }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Feedback Count by Sentiment
+                </Typography>
+                <div
+                  style={{
+                    position: "relative",
+                    width: "100%",
+                    height: "300px",
+                  }}
+                >
+                  <Bar data={chartData.barData} />
+                </div>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
       ) : (
-        <p>Loading chart...</p>
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
+          <CircularProgress />
+        </Box>
       )}
-    </div>
+    </Box>
   );
 };
 

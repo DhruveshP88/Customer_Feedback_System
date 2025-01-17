@@ -2,9 +2,11 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
-  Box,
-  Button,
+  AppBar,
+  Toolbar,
   Typography,
+  Button,
+  Box,
   List,
   ListItem,
   ListItemText,
@@ -17,7 +19,7 @@ const UserDashboard = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleButtonClick = () => {
+  const handleSubmitFeedback = () => {
     navigate("/feedbackform"); // Navigate to the feedback form page
   };
 
@@ -49,61 +51,61 @@ const UserDashboard = () => {
   }, []);
 
   return (
-    <Box
-      sx={{
-        maxWidth: 800,
-        mx: "auto",
-        mt: 5,
-        p: 3,
-        border: "1px solid #ccc",
-        borderRadius: 2,
-        boxShadow: 3,
-        backgroundColor: "#fff",
-      }}
-    >
-      <Typography variant="h4" gutterBottom>
-        User Dashboard
-      </Typography>
-      <Typography variant="h6" gutterBottom>
-        Your Feedbacks
-      </Typography>
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-      <List>
-        {feedbacks.length > 0 ? (
-          feedbacks.map((feedback) => (
-            <ListItem key={feedback.id}>
-              <ListItemText
-                primary={`Feedback Type: ${feedback.feedback_type}`}
-                secondary={`Comments: ${feedback.comments}`}
-              />
-              <Divider />
-            </ListItem>
-          ))
-        ) : (
-          <Typography variant="body1">No feedback available.</Typography>
+    <>
+      <AppBar position="sticky">
+        <Toolbar>
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+            User Dashboard
+          </Typography>
+          <Button color="inherit" onClick={handleSubmitFeedback}>
+            Submit Feedback
+          </Button>
+          <Button color="inherit" onClick={handleLogout} sx={{ ml: 2 }}>
+            Logout
+          </Button>
+        </Toolbar>
+      </AppBar>
+
+      <Box
+        sx={{
+          maxWidth: 800,
+          mx: "auto",
+          mt: 5,
+          p: 3,
+          border: "1px solid #ccc",
+          borderRadius: 2,
+          boxShadow: 3,
+          backgroundColor: "#fff",
+        }}
+      >
+        <Typography variant="h4" gutterBottom>
+          User Dashboard
+        </Typography>
+        <Typography variant="h6" gutterBottom>
+          Your Feedbacks
+        </Typography>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
         )}
-      </List>
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={handleButtonClick}
-        sx={{ mt: 3 }}
-      >
-        Submit a Feedback
-      </Button>
-      <Button
-        variant="outlined"
-        color="secondary"
-        onClick={handleLogout}
-        sx={{ mt: 2, ml: 2 }}
-      >
-        Logout
-      </Button>
-    </Box>
+        <List>
+          {feedbacks.length > 0 ? (
+            feedbacks.map((feedback) => (
+              <ListItem key={feedback.id}>
+                <ListItemText
+                  primary={`Feedback Type: ${feedback.feedback_type}`}
+                  secondary={`Comments: ${feedback.comments}`}
+                />
+                <Divider />
+              </ListItem>
+            ))
+          ) : (
+            <Typography variant="body1">No feedback available.</Typography>
+          )}
+        </List>
+      </Box>
+    </>
   );
 };
 
