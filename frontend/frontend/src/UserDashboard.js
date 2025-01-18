@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
 import {
   AppBar,
   Toolbar,
@@ -15,77 +14,88 @@ import {
   Card,
   CardContent,
   IconButton,
-  InputAdornment,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   TextField,
+  InputAdornment,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
-import { Feedback, ExitToApp, Search } from "@mui/icons-material";
+import { Feedback, ExitToApp, Search, AddComment } from "@mui/icons-material";
 
 const UserDashboard = () => {
   const [feedbacks, setFeedbacks] = useState([]);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const navigate = useNavigate();
+  const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
+  const [feedbackType, setFeedbackType] = useState("");
+  const [comments, setComments] = useState("");
+  const [userData, setUserData] = useState({ email: "" }); // Removed name field
+  const [name, setName] = useState(""); // Added name field for manual entry
 
-  const handleSubmitFeedback = () => {
-    navigate("/feedbackform"); // Navigate to the feedback form page
+  const fetchUserData = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await axios.get(
+        "http://localhost:8000/api/user-detail/",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setUserData({ email: response.data.email }); // Only storing email
+    } catch (err) {
+      setError("Error fetching user data.");
+    }
+  };
+
+  const fetchFeedbacks = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await axios.get("http://localhost:8000/api/feedback/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setFeedbacks(response.data);
+    } catch (err) {
+      setError("Error fetching feedbacks.");
+    }
   };
 
   const handleLogout = () => {
-    // Remove the token and role from localStorage
     localStorage.removeItem("token");
     localStorage.removeItem("role");
-    // Redirect to the login page
-    navigate("/login");
+    window.location.href = "/login";
+  };
+
+  const handleSubmitFeedback = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      await axios.post(
+        "http://localhost:8000/api/feedback/",
+        {
+          user: userData.id, // Send user ID
+          name, // Added name field
+          email: userData.email,
+          feedback_type: feedbackType,
+          comments,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setFeedbackDialogOpen(false);
+      fetchFeedbacks(); // Refresh feedback list
+    } catch (err) {
+      setError("Error submitting feedback.");
+    }
   };
 
   useEffect(() => {
-    const verifyUserRole = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        navigate("/login"); // Redirect to login if no token is found
-        return;
-      }
-
-      try {
-        const userResponse = await axios.get(
-          "http://localhost:8000/api/user-detail/",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (userResponse.data.role !== "staff") {
-          navigate("/unauthorized"); // Redirect to unauthorized page if role is not admin
-          return;
-        }
-      } catch (err) {
-        setError("Error fetching user data.");
-        console.error("Error verifying user role:", err);
-      }
-    };
-    verifyUserRole();
-  }, [navigate]);
-
-  useEffect(() => {
-    const fetchUserFeedback = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get(
-          "http://localhost:8000/api/feedback/",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setFeedbacks(response.data);
-      } catch (err) {
-        setError("Error fetching feedback. Please try again.");
-        console.error("Error fetching user feedback:", err);
-      }
-    };
-
-    fetchUserFeedback();
+    fetchUserData();
+    fetchFeedbacks();
   }, []);
 
   const filteredFeedbacks = feedbacks.filter(
@@ -98,22 +108,21 @@ const UserDashboard = () => {
 
   return (
     <>
-      <AppBar position="sticky" sx={{ backgroundColor: "#1976d2" }}>
+      <AppBar position="sticky">
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             User Dashboard
           </Typography>
           <Button
             color="inherit"
-            onClick={handleSubmitFeedback}
-            startIcon={<Feedback />}
+            onClick={() => setFeedbackDialogOpen(true)}
+            startIcon={<AddComment />}
           >
             Submit Feedback
           </Button>
           <Button
             color="inherit"
             onClick={handleLogout}
-            sx={{ ml: 2 }}
             startIcon={<ExitToApp />}
           >
             Logout
@@ -121,34 +130,18 @@ const UserDashboard = () => {
         </Toolbar>
       </AppBar>
 
-      <Box
-        sx={{
-          maxWidth: 900,
-          mx: "auto",
-          mt: 5,
-          p: 3,
-          border: "1px solid #ccc",
-          borderRadius: 2,
-          boxShadow: 3,
-          backgroundColor: "#f5f5f5",
-          background: "linear-gradient(135deg, #e3f2fd, #bbdefb)",
-        }}
-      >
+      <Box sx={{ maxWidth: 900, mx: "auto", mt: 5, p: 3 }}>
         <Typography variant="h4" gutterBottom>
-          Welcome to Your Dashboard
+          Welcome, {userData.email}
         </Typography>
 
         <TextField
           label="Search Feedback"
           variant="outlined"
+          fullWidth
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          sx={{
-            mb: 3,
-            width: "100%",
-            backgroundColor: "white",
-            borderRadius: 1,
-          }}
+          sx={{ mb: 3 }}
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
@@ -158,11 +151,7 @@ const UserDashboard = () => {
           }}
         />
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
+        {error && <Alert severity="error">{error}</Alert>}
 
         <Typography variant="h6" gutterBottom>
           Your Feedbacks
@@ -171,31 +160,71 @@ const UserDashboard = () => {
         <List>
           {filteredFeedbacks.length > 0 ? (
             filteredFeedbacks.map((feedback) => (
-              <ListItem key={feedback.id} sx={{ mb: 2 }}>
-                <Card
-                  sx={{
-                    width: "100%",
-                    boxShadow: 3,
-                    "&:hover": {
-                      boxShadow: 6,
-                    },
-                  }}
-                >
+              <ListItem key={feedback.id}>
+                <Card sx={{ width: "100%" }}>
                   <CardContent>
                     <ListItemText
-                      primary={`Feedback Type: ${feedback.feedback_type}`}
+                      primary={`Type: ${feedback.feedback_type}`}
                       secondary={`Comments: ${feedback.comments}`}
                     />
-                    <Divider />
                   </CardContent>
                 </Card>
               </ListItem>
             ))
           ) : (
-            <Typography variant="body1">No feedback available.</Typography>
+            <Typography>No feedback available.</Typography>
           )}
         </List>
       </Box>
+
+      {/* Feedback Form Dialog */}
+      <Dialog
+        open={feedbackDialogOpen}
+        onClose={() => setFeedbackDialogOpen(false)}
+      >
+        <DialogTitle>Submit Feedback</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)} // Handling name input
+            fullWidth
+            required
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            label="Email"
+            value={userData.email}
+            fullWidth
+            disabled
+            sx={{ mb: 2 }}
+          />
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel id="feedback-type-label">Feedback Type</InputLabel>
+            <Select
+              labelId="feedback-type-label"
+              value={feedbackType}
+              onChange={(e) => setFeedbackType(e.target.value)}
+            >
+              <MenuItem value="Product">Product</MenuItem>
+              <MenuItem value="Service">Service</MenuItem>
+              <MenuItem value="Other">Other</MenuItem>
+            </Select>
+          </FormControl>
+          <TextField
+            label="Comments"
+            value={comments}
+            onChange={(e) => setComments(e.target.value)}
+            fullWidth
+            multiline
+            rows={4}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setFeedbackDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleSubmitFeedback}>Submit</Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

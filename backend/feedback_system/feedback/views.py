@@ -54,19 +54,59 @@ class FeedbackListCreateView(ListCreateAPIView):
         send_mail(subject, message, settings.EMAIL_HOST_USER, recipient_list)
 
 
+
 class FeedbackDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def delete(self, request, feedback_id):
+    def get_object(self, feedback_id):
         try:
-            feedback = Feedback.objects.get(id=feedback_id)
-            if request.user.role != 'admin' and feedback.user != request.user:
-                return Response({"error": "You do not have permission to delete this feedback."}, status=403)
-
-            feedback.delete()
-            return Response({"message": "Feedback deleted successfully."})
+            return Feedback.objects.get(id=feedback_id)
         except Feedback.DoesNotExist:
-            return Response({"error": "Feedback not found."}, status=404)
+            return None
+
+    def put(self, request, feedback_id):
+        feedback = self.get_object(feedback_id)
+        if not feedback:
+            return Response({"error": "Feedback not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Ensure the user has permission to update this feedback
+        if request.user.role != 'admin' and feedback.user != request.user:
+            return Response({"error": "You do not have permission to update this feedback."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Update the feedback with the new data
+        serializer = FeedbackSerializer(feedback, data=request.data, partial=True)
+        if serializer.is_valid():
+            updated_feedback = serializer.save()
+
+            # Re-run sentiment analysis after feedback update
+            updated_feedback.sentiment = self.analyze_sentiment(updated_feedback.comments)
+            updated_feedback.save()
+
+            return Response(FeedbackSerializer(updated_feedback).data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, feedback_id):
+        feedback = self.get_object(feedback_id)
+        if not feedback:
+            return Response({"error": "Feedback not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Ensure the user has permission to delete this feedback
+        if request.user.role != 'admin' and feedback.user != request.user:
+            return Response({"error": "You do not have permission to delete this feedback."}, status=status.HTTP_403_FORBIDDEN)
+
+        feedback.delete()
+        return Response({"message": "Feedback deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+
+    def analyze_sentiment(self, feedback_text):
+        blob = TextBlob(feedback_text)
+        polarity = blob.sentiment.polarity
+        if polarity > 0.29:
+            return 'Positive'
+        elif polarity < -0.29:
+            return 'Negative'
+        else:
+            return 'Neutral'
+
 
 
 class SentimentDistributionView(APIView):
