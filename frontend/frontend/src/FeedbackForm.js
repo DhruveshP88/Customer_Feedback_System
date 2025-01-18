@@ -50,9 +50,20 @@ const FeedbackForm = () => {
     const token = localStorage.getItem("token");
 
     try {
+      // Get the user ID from the authenticated user
+      const userResponse = await axios.get(
+        "http://localhost:8000/api/user-detail/",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const userId = userResponse.data.id; // Assuming the user object has an 'id' field
+
+      // Send the feedback data along with the user ID
       const response = await axios.post(
         "http://localhost:8000/api/feedback/",
         {
+          user: userId, // Ensure user is passed as a single ID, not an array
           name,
           email,
           feedback_type: feedbackType,
@@ -64,6 +75,7 @@ const FeedbackForm = () => {
           },
         }
       );
+
       setMessage("Feedback submitted successfully!");
       setName("");
       setEmail("");

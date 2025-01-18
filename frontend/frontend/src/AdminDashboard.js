@@ -18,13 +18,14 @@ import {
   AppBar,
   Toolbar,
   InputAdornment,
-  Grid,
   Divider,
-  Card,
-  CardContent,
-  Link,
+  IconButton,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
 } from "@mui/material";
-import { Search } from "@mui/icons-material";
+import { Search, AccountCircle, ExitToApp, Delete } from "@mui/icons-material";
 
 const AdminDashboard = () => {
   const [feedbacks, setFeedbacks] = useState([]);
@@ -35,6 +36,8 @@ const AdminDashboard = () => {
   const [itemsPerPage] = useState(10);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [feedbackToDelete, setFeedbackToDelete] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -126,6 +129,47 @@ const AdminDashboard = () => {
     setAlerts((prevAlerts) => prevAlerts.filter((alert) => alert.id !== id));
   };
 
+  const handleDeleteFeedback = async () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      setError("No token found, please log in.");
+      return;
+    }
+
+    try {
+      await axios.delete(
+        `http://localhost:8000/api/feedback/${feedbackToDelete.id}/`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Remove the deleted feedback from the state
+      setFeedbacks((prevFeedbacks) =>
+        prevFeedbacks.filter((feedback) => feedback.id !== feedbackToDelete.id)
+      );
+      setFilteredFeedbacks((prevFeedbacks) =>
+        prevFeedbacks.filter((feedback) => feedback.id !== feedbackToDelete.id)
+      );
+      setOpenDeleteDialog(false); // Close the dialog after deletion
+    } catch (err) {
+      setError("Error deleting feedback.");
+    }
+  };
+
+  const openDeleteConfirmation = (feedback) => {
+    setFeedbackToDelete(feedback);
+    setOpenDeleteDialog(true);
+  };
+
+  const closeDeleteConfirmation = () => {
+    setOpenDeleteDialog(false);
+    setFeedbackToDelete(null);
+  };
+
   if (loading) {
     return (
       <Box
@@ -134,6 +178,7 @@ const AdminDashboard = () => {
           justifyContent: "center",
           alignItems: "center",
           height: "100vh",
+          background: "linear-gradient(135deg, #42a5f5, #66bb6a)",
         }}
       >
         <CircularProgress />
@@ -154,21 +199,23 @@ const AdminDashboard = () => {
         p: 3,
         borderRadius: 2,
         boxShadow: 3,
+        backgroundColor: "#f5f5f5",
+        background: "linear-gradient(135deg, #e3f2fd, #bbdefb)",
       }}
     >
       {/* Navigation Bar */}
-      <AppBar position="sticky">
+      <AppBar position="sticky" sx={{ backgroundColor: "#1976d2" }}>
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             Admin Dashboard
           </Typography>
-          <Button
+          <IconButton
             color="inherit"
             onClick={() => navigate("/user-management")}
             sx={{ mr: 2 }}
           >
-            Manage Users
-          </Button>
+            <AccountCircle />
+          </IconButton>
           <TextField
             label="Search Feedbacks"
             variant="outlined"
@@ -200,7 +247,11 @@ const AdminDashboard = () => {
           >
             Visualization
           </Button>
-          <Button color="inherit" onClick={handleLogout}>
+          <Button
+            color="inherit"
+            onClick={handleLogout}
+            startIcon={<ExitToApp />}
+          >
             Logout
           </Button>
         </Toolbar>
@@ -208,30 +259,70 @@ const AdminDashboard = () => {
 
       {/* Negative Feedback Alerts */}
       {alerts.length > 0 && (
-        <Box sx={{ mb: 3, p: 2, border: "1px solid red", borderRadius: 2 }}>
-          <Typography variant="h6" color="error" gutterBottom>
-            Negative Feedback Alerts
+        <Box sx={{ mb: 3 }}>
+          <Typography
+            variant="h6"
+            sx={{
+              color: "#d32f2f",
+              display: "flex",
+              alignItems: "center",
+              mb: 2,
+              animation: "blink 1s infinite",
+              "@keyframes blink": {
+                "0%": { opacity: 1 },
+                "50%": { opacity: 0.5 },
+                "100%": { opacity: 1 },
+              },
+            }}
+          >
+            <Alert
+              severity="error"
+              icon={false}
+              sx={{ fontSize: "inherit", py: 0 }}
+            >
+              Negative Feedback Alerts !!!!
+            </Alert>
           </Typography>
-          <ul>
-            {alerts.map((alert) => (
-              <li key={alert.id}>
-                <Typography variant="body2">
-                  <strong>Name:</strong> {alert.name} <br />
-                  <strong>Email:</strong> {alert.email} <br />
-                  <strong>Comments:</strong> {alert.comments} <br />
-                  <strong>Sentiment:</strong>{" "}
-                  <span style={{ color: "red" }}>{alert.sentiment}</span>
-                </Typography>
+          {alerts.map((alert) => (
+            <Alert
+              key={alert.id}
+              severity="error"
+              sx={{
+                mb: 2,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                flexWrap: "wrap",
+                p: 2,
+                border: "2px solid #d32f2f",
+              }}
+              icon={<AccountCircle />}
+              action={
                 <Button
-                  variant="text"
-                  color="error"
+                  size="small"
+                  color="inherit"
                   onClick={() => handleDismissAlert(alert.id)}
                 >
                   Dismiss
                 </Button>
-              </li>
-            ))}
-          </ul>
+              }
+            >
+              <Box>
+                <Typography variant="body2" gutterBottom>
+                  <strong>Name:</strong> {alert.name}
+                </Typography>
+                <Typography variant="body2" gutterBottom>
+                  <strong>Email:</strong> {alert.email}
+                </Typography>
+                <Typography variant="body2" gutterBottom>
+                  <strong>Comments:</strong> {alert.comments}
+                </Typography>
+                <Typography variant="body2" sx={{ color: "#d32f2f" }}>
+                  <strong>Sentiment:</strong> {alert.sentiment}
+                </Typography>
+              </Box>
+            </Alert>
+          ))}
         </Box>
       )}
 
@@ -261,17 +352,37 @@ const AdminDashboard = () => {
                 <TableCell>
                   <strong>Sentiment</strong>
                 </TableCell>
+                <TableCell>
+                  <strong>Actions</strong>
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {currentItems.map((feedback) => (
-                <TableRow key={feedback.id}>
+                <TableRow
+                  key={feedback.id}
+                  sx={{
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      cursor: "pointer",
+                    },
+                  }}
+                >
                   <TableCell>{feedback.user}</TableCell>
                   <TableCell>{feedback.name}</TableCell>
                   <TableCell>{feedback.email}</TableCell>
                   <TableCell>{feedback.feedback_type}</TableCell>
                   <TableCell>{feedback.comments}</TableCell>
                   <TableCell>{feedback.sentiment || "Not analyzed"}</TableCell>
+                  <TableCell>
+                    <Button
+                      color="error"
+                      startIcon={<Delete />}
+                      onClick={() => openDeleteConfirmation(feedback)}
+                    >
+                      Delete
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -293,8 +404,8 @@ const AdminDashboard = () => {
               variant="outlined"
               sx={{
                 mx: 0.5,
-                backgroundColor: currentPage === page + 1 ? "#1976d2" : "#fff",
-                color: currentPage === page + 1 ? "#fff" : "#000",
+                backgroundColor: currentPage === page + 1 ? "#1976d2" : "white",
+                color: currentPage === page + 1 ? "white" : "black",
               }}
             >
               {page + 1}
@@ -302,6 +413,24 @@ const AdminDashboard = () => {
           ))}
         </Box>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={openDeleteDialog} onClose={closeDeleteConfirmation}>
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete this feedback?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeDeleteConfirmation} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteFeedback} color="error">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

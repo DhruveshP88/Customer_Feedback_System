@@ -18,7 +18,14 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 
+from rest_framework import serializers
+from django.contrib.auth import get_user_model
+from rest_framework.permissions import IsAuthenticated
+from .models import Feedback
+
 class FeedbackSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(queryset=get_user_model().objects.all(), default=serializers.CurrentUserDefault())
+
     class Meta:
         model = Feedback
         fields = '__all__'

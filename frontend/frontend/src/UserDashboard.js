@@ -12,11 +12,18 @@ import {
   ListItemText,
   Divider,
   Alert,
+  Card,
+  CardContent,
+  IconButton,
+  InputAdornment,
+  TextField,
 } from "@mui/material";
+import { Feedback, ExitToApp, Search } from "@mui/icons-material";
 
 const UserDashboard = () => {
   const [feedbacks, setFeedbacks] = useState([]);
   const [error, setError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 
   const handleSubmitFeedback = () => {
@@ -81,17 +88,34 @@ const UserDashboard = () => {
     fetchUserFeedback();
   }, []);
 
+  const filteredFeedbacks = feedbacks.filter(
+    (feedback) =>
+      feedback.feedback_type
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      feedback.comments.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <>
-      <AppBar position="sticky">
+      <AppBar position="sticky" sx={{ backgroundColor: "#1976d2" }}>
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             User Dashboard
           </Typography>
-          <Button color="inherit" onClick={handleSubmitFeedback}>
+          <Button
+            color="inherit"
+            onClick={handleSubmitFeedback}
+            startIcon={<Feedback />}
+          >
             Submit Feedback
           </Button>
-          <Button color="inherit" onClick={handleLogout} sx={{ ml: 2 }}>
+          <Button
+            color="inherit"
+            onClick={handleLogout}
+            sx={{ ml: 2 }}
+            startIcon={<ExitToApp />}
+          >
             Logout
           </Button>
         </Toolbar>
@@ -99,36 +123,72 @@ const UserDashboard = () => {
 
       <Box
         sx={{
-          maxWidth: 800,
+          maxWidth: 900,
           mx: "auto",
           mt: 5,
           p: 3,
           border: "1px solid #ccc",
           borderRadius: 2,
           boxShadow: 3,
-          backgroundColor: "#fff",
+          backgroundColor: "#f5f5f5",
+          background: "linear-gradient(135deg, #e3f2fd, #bbdefb)",
         }}
       >
         <Typography variant="h4" gutterBottom>
-          User Dashboard
+          Welcome to Your Dashboard
         </Typography>
-        <Typography variant="h6" gutterBottom>
-          Your Feedbacks
-        </Typography>
+
+        <TextField
+          label="Search Feedback"
+          variant="outlined"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          sx={{
+            mb: 3,
+            width: "100%",
+            backgroundColor: "white",
+            borderRadius: 1,
+          }}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <Search />
+              </InputAdornment>
+            ),
+          }}
+        />
+
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
           </Alert>
         )}
+
+        <Typography variant="h6" gutterBottom>
+          Your Feedbacks
+        </Typography>
+
         <List>
-          {feedbacks.length > 0 ? (
-            feedbacks.map((feedback) => (
-              <ListItem key={feedback.id}>
-                <ListItemText
-                  primary={`Feedback Type: ${feedback.feedback_type}`}
-                  secondary={`Comments: ${feedback.comments}`}
-                />
-                <Divider />
+          {filteredFeedbacks.length > 0 ? (
+            filteredFeedbacks.map((feedback) => (
+              <ListItem key={feedback.id} sx={{ mb: 2 }}>
+                <Card
+                  sx={{
+                    width: "100%",
+                    boxShadow: 3,
+                    "&:hover": {
+                      boxShadow: 6,
+                    },
+                  }}
+                >
+                  <CardContent>
+                    <ListItemText
+                      primary={`Feedback Type: ${feedback.feedback_type}`}
+                      secondary={`Comments: ${feedback.comments}`}
+                    />
+                    <Divider />
+                  </CardContent>
+                </Card>
               </ListItem>
             ))
           ) : (

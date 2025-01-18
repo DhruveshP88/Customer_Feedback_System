@@ -17,7 +17,6 @@ from django.db.models import Count # type: ignore
 from rest_framework.response import Response # type: ignore
 from django.core.mail import send_mail # type: ignore
 from django.conf import settings # type: ignore
-
 class FeedbackListCreateView(ListCreateAPIView):
     queryset = Feedback.objects.all()
     serializer_class = FeedbackSerializer
@@ -53,6 +52,21 @@ class FeedbackListCreateView(ListCreateAPIView):
         message = f"New negative feedback received:\n\n{feedback.comments}"
         recipient_list = ['jhonpamarkytics@gmail.com']  # Replace with actual admin emails
         send_mail(subject, message, settings.EMAIL_HOST_USER, recipient_list)
+
+
+class FeedbackDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, feedback_id):
+        try:
+            feedback = Feedback.objects.get(id=feedback_id)
+            if request.user.role != 'admin' and feedback.user != request.user:
+                return Response({"error": "You do not have permission to delete this feedback."}, status=403)
+
+            feedback.delete()
+            return Response({"message": "Feedback deleted successfully."})
+        except Feedback.DoesNotExist:
+            return Response({"error": "Feedback not found."}, status=404)
 
 
 class SentimentDistributionView(APIView):

@@ -2,6 +2,7 @@ from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
     FeedbackListCreateView,
+    FeedbackDetailView,  # Add the FeedbackDetailView
     register_user,
     LoginView,
     UserView,
@@ -10,6 +11,7 @@ from .views import (
     UserManagementView,
 )
 
+# In your urls.py
 urlpatterns = [
     # Authentication
     path('api/register/', register_user, name='register'),
@@ -18,6 +20,7 @@ urlpatterns = [
 
     # Feedback
     path('api/feedback/', FeedbackListCreateView.as_view(), name='feedback-list'),
+    path('api/feedback/<int:feedback_id>/', FeedbackDetailView.as_view(), name='feedback-detail'),  # Corrected here
     path('api/sentiment-distribution/', SentimentDistributionView.as_view(), name='sentiment-distribution'),
     path('api/negative-feedback-alerts/', negative_feedback_alerts, name='negative-feedback-alert'),
 
