@@ -25,7 +25,14 @@ import {
   FormControl,
   InputLabel,
 } from "@mui/material";
-import { Feedback, ExitToApp, Search, AddComment } from "@mui/icons-material";
+import {
+  Feedback,
+  ExitToApp,
+  Search,
+  AddComment,
+  Edit,
+  Delete,
+} from "@mui/icons-material";
 
 const UserDashboard = () => {
   const [feedbacks, setFeedbacks] = useState([]);
@@ -34,8 +41,9 @@ const UserDashboard = () => {
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   const [feedbackType, setFeedbackType] = useState("");
   const [comments, setComments] = useState("");
-  const [userData, setUserData] = useState({ email: "" }); // Removed name field
-  const [name, setName] = useState(""); // Added name field for manual entry
+  const [userData, setUserData] = useState({ email: "" });
+  const [name, setName] = useState("");
+  const [editingFeedback, setEditingFeedback] = useState(null); // Track feedback being edited
 
   const fetchUserData = async () => {
     const token = localStorage.getItem("token");
@@ -46,7 +54,7 @@ const UserDashboard = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setUserData({ email: response.data.email }); // Only storing email
+      setUserData({ email: response.data.email });
     } catch (err) {
       setError("Error fetching user data.");
     }
@@ -73,23 +81,62 @@ const UserDashboard = () => {
   const handleSubmitFeedback = async () => {
     const token = localStorage.getItem("token");
     try {
-      await axios.post(
-        "http://localhost:8000/api/feedback/",
-        {
-          user: userData.id, // Send user ID
-          name, // Added name field
-          email: userData.email,
-          feedback_type: feedbackType,
-          comments,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      if (editingFeedback) {
+        // Update existing feedback
+        await axios.put(
+          `http://localhost:8000/api/feedback/${editingFeedback.id}/`,
+          {
+            user: userData.id,
+            name,
+            email: userData.email,
+            feedback_type: feedbackType,
+            comments,
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+      } else {
+        // Create new feedback
+        await axios.post(
+          "http://localhost:8000/api/feedback/",
+          {
+            user: userData.id,
+            name,
+            email: userData.email,
+            feedback_type: feedbackType,
+            comments,
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+      }
       setFeedbackDialogOpen(false);
-      fetchFeedbacks(); // Refresh feedback list
+      fetchFeedbacks();
+      setEditingFeedback(null); // Reset editing state
     } catch (err) {
       setError("Error submitting feedback.");
+    }
+  };
+
+  const handleEditFeedback = (feedback) => {
+    setEditingFeedback(feedback);
+    setName(feedback.name);
+    setFeedbackType(feedback.feedback_type);
+    setComments(feedback.comments);
+    setFeedbackDialogOpen(true);
+  };
+
+  const handleDeleteFeedback = async (feedbackId) => {
+    const token = localStorage.getItem("token");
+    try {
+      await axios.delete(`http://localhost:8000/api/feedback/${feedbackId}/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      fetchFeedbacks(); // Refresh feedback list
+    } catch (err) {
+      setError("Error deleting feedback.");
     }
   };
 
@@ -115,7 +162,10 @@ const UserDashboard = () => {
           </Typography>
           <Button
             color="inherit"
-            onClick={() => setFeedbackDialogOpen(true)}
+            onClick={() => {
+              setEditingFeedback(null); // Reset editing state
+              setFeedbackDialogOpen(true);
+            }}
             startIcon={<AddComment />}
           >
             Submit Feedback
@@ -167,6 +217,20 @@ const UserDashboard = () => {
                       primary={`Type: ${feedback.feedback_type}`}
                       secondary={`Comments: ${feedback.comments}`}
                     />
+                    <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+                      <IconButton
+                        onClick={() => handleEditFeedback(feedback)}
+                        color="primary"
+                      >
+                        <Edit />
+                      </IconButton>
+                      <IconButton
+                        onClick={() => handleDeleteFeedback(feedback.id)}
+                        color="error"
+                      >
+                        <Delete />
+                      </IconButton>
+                    </Box>
                   </CardContent>
                 </Card>
               </ListItem>
@@ -182,12 +246,14 @@ const UserDashboard = () => {
         open={feedbackDialogOpen}
         onClose={() => setFeedbackDialogOpen(false)}
       >
-        <DialogTitle>Submit Feedback</DialogTitle>
+        <DialogTitle>
+          {editingFeedback ? "Edit Feedback" : "Submit Feedback"}
+        </DialogTitle>
         <DialogContent>
           <TextField
             label="Name"
             value={name}
-            onChange={(e) => setName(e.target.value)} // Handling name input
+            onChange={(e) => setName(e.target.value)}
             fullWidth
             required
             sx={{ mb: 2 }}
@@ -222,7 +288,9 @@ const UserDashboard = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setFeedbackDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleSubmitFeedback}>Submit</Button>
+          <Button onClick={handleSubmitFeedback}>
+            {editingFeedback ? "Update" : "Submit"}
+          </Button>
         </DialogActions>
       </Dialog>
     </>

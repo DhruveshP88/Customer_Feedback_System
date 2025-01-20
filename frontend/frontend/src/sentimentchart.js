@@ -87,7 +87,7 @@ const SentimentChart = () => {
             {
               label: "Sentiment Distribution",
               data: Object.values(data),
-              backgroundColor: ["#FFC107", "#4CAF50", "#F44336"],
+              backgroundColor: ["#4CAF50","#FFC107", "#F44336", ],
               borderColor: ["#388E3C", "#FFA000", "#D32F2F"],
               borderWidth: 1,
             },
